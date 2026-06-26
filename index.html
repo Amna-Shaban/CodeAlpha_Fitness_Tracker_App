@@ -1,0 +1,259 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker Dashboard</title>
+    <style>
+        /* Modern, Clean & Minimal Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+
+        /* Dashboard Summary Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #eef2f7;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 5px 0;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .stat-card p {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cccccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            width: 100%;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        /* Activity Log List */
+        .log-container {
+            margin-top: 25px;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eef2f7;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .log-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .clear-btn:hover {
+            text-decoration: underline;
+        }
+
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+            border: 1px solid #eef2f7;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Fitness Tracker Dashboard</h2>
+
+        <div class="dashboard">
+            <div class="stat-card">
+                <h3>Total Workouts</h3>
+                <p id="total-workouts">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Calories Burned</h3>
+                <p id="total-calories">0 kcal</p>
+            </div>
+        </div>
+
+        <form id="fitness-form">
+            <div class="form-group">
+                <label for="activity">Exercise Type</label>
+                <select id="activity" required>
+                    <option value="Running">🏃 Running</option>
+                    <option value="Cycling">🚴 Cycling</option>
+                    <option value="Walking">🚶 Walking</option>
+                    <option value="Strength Training">🏋️ Strength Training</option>
+                    <option value="Yoga">🧘 Yoga</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="duration">Duration (Minutes)</label>
+                <input type="number" id="duration" placeholder="e.g. 30" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="calories">Calories Burned (kcal)</label>
+                <input type="number" id="calories" placeholder="e.g. 250" min="1" required>
+            </div>
+            <button type="submit" class="btn">Log Activity</button>
+        </form>
+
+        <div class="log-container">
+            <div class="log-header">
+                <div class="log-title">Recent Activities</div>
+                <button class="clear-btn" id="clear-btn">Clear All</button>
+            </div>
+            <div id="log-list">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Load existing activities from localStorage, or start with an empty array if none exist
+        let activities = JSON.parse(localStorage.getItem('fitness_activities')) || [];
+
+        const form = document.getElementById('fitness-form');
+        const logList = document.getElementById('log-list');
+        const totalWorkoutsElem = document.getElementById('total-workouts');
+        const totalCaloriesElem = document.getElementById('total-calories');
+        const clearBtn = document.getElementById('clear-btn');
+
+        // Function to update Dashboard stats & display list
+        function updateDashboard() {
+            // 1. Calculate totals
+            const totalWorkouts = activities.length;
+            const totalCalories = activities.reduce((sum, item) => sum + item.calories, 0);
+
+            // 2. Update stats on screen
+            totalWorkoutsElem.textContent = totalWorkouts;
+            totalCaloriesElem.textContent = `${totalCalories} kcal`;
+
+            // 3. Render the activity items
+            logList.innerHTML = '';
+            activities.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'log-item';
+                div.innerHTML = `
+                    <span><strong>${item.type}</strong> (${item.duration} mins)</span>
+                    <span style="color: #e74c3c; font-weight: bold;">+${item.calories} kcal</span>
+                `;
+                logList.prepend(div); // Show latest activity at the top
+            });
+        }
+
+        // Handle Form Submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Get form data
+            const type = document.getElementById('activity').value;
+            const duration = parseInt(document.getElementById('duration').value);
+            const calories = parseInt(document.getElementById('calories').value);
+
+            // Add to data array
+            activities.push({ type, duration, calories });
+
+            // Save the updated array directly to localStorage
+            localStorage.setItem('fitness_activities', JSON.stringify(activities));
+
+            // Refresh UI & clear fields
+            updateDashboard();
+            form.reset();
+        });
+
+        // Handle Clear All Data button click
+        clearBtn.addEventListener('click', function() {
+            if (confirm("Are you sure you want to clear your fitness history?")) {
+                localStorage.removeItem('fitness_activities');
+                activities = [];
+                updateDashboard();
+            }
+        });
+
+        // Automatically load and display saved data when the application opens
+        window.onload = updateDashboard;
+    </script>
+
+</body>
+</html>
